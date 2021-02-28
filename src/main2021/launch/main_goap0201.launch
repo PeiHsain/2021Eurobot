@@ -1,0 +1,18 @@
+<launch>
+
+	<node name="main_node" pkg="main2021" type="main" output="screen" respawn="false">
+	</node>
+
+	<node name="data_node" pkg="main2021" type="Data" output="screen" respawn="false">
+	</node>
+
+	<node name="goap_node" pkg="main2021" type="goap_big_server.py" respawn="false">
+	</node>
+
+	<node name="mission_node" pkg="main2021" type="mission_simple" respawn="false">
+	</node>
+
+	<node name="camera_node" pkg="main2021" type="cameraTest" respawn="false">
+	</node>
+
+</launch>

@@ -1,0 +1,11 @@
+float32 small_x
+float32 small_y
+float32 small_degree
+int32[] small_action
+int32[] action_list
+int32[] cup_color
+int32 cup
+bool ns
+bool team
+float32 time
+int32 status
