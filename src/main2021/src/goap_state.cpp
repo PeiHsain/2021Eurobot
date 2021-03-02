@@ -77,7 +77,7 @@ void goap_data::give_goap(State sta, Friend f, Position p){
     g_srv.request.time = sta.get_time();
     g_srv.request.friend_action.assign(f.getf_action().begin(), f.getf_action().end());
     g_srv.request.action_list.assign(sta.get_list().begin(), sta.get_list().end());//{0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0};
-    g_srv.request.cup_color = {0, 1, 0, 1, 0};
+    g_srv.request.cup_color = sta.get_color();
     g_srv.request.cup = sta.get_cup(); //1111 1111 1111 1111
     g_srv.request.hand.assign(sta.get_hand().begin(), sta.get_hand().end());
     g_srv.request.enemy1_pos = {p.get_e1_x(), p.get_e1_y()};

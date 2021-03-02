@@ -37,6 +37,7 @@ float State::getth(){ return degree;}
 
 std::vector<int>& State::get_hand(){ return hand;}
 std::vector<int>& State::get_list(){ return actionList;}
+std::vector<int>& State::get_color(){ return cup_color;}
 int State::get_cup(){ return cup;}
 bool State::get_ns(){ return ns;}
 bool State::get_team(){ return team;}
@@ -59,6 +60,9 @@ void State::set_hand(std::vector<int>* h){
 }
 void State::set_list(std::vector<int>* a){
     actionList.assign(a->begin(), a->end());
+}
+void State::set_color(std::vector<int>* c){
+    cup_color.assign(c->begin(), c->end());
 }
 void State::set_cup(int c, int m){
     if(m == 12){

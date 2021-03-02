@@ -1,5 +1,5 @@
-cmake_minimum_required(VERSION 3.0.2)
-project(main2021)
+cmake_minimum_required(VERSION 2.8.3)
+project(cupDetection)
 
 ## Compile as C++11, supported in ROS Kinetic and newer
 # add_compile_options(-std=c++11)
@@ -8,20 +8,11 @@ project(main2021)
 ## if COMPONENTS list like find_package(catkin REQUIRED COMPONENTS xyz)
 ## is used, also find other catkin packages
 find_package(catkin REQUIRED COMPONENTS
-  geometry_msgs
+  cv_bridge
+  image_transport
   roscpp
-  rospy
-  std_msgs
-  message_generation
-  message_filters
-#  nav_msgs
-#  sensor_msg
-  tf2
-  tf2_geometry_msgs
-  tf2_msgs
-  tf2_ros
-  nav_msgs
   sensor_msgs
+  std_msgs
 )
 
 ## System dependencies are found with CMake's conventions
@@ -58,26 +49,18 @@ find_package(catkin REQUIRED COMPONENTS
 ##   * add every package in MSG_DEP_SET to generate_messages(DEPENDENCIES ...)
 
 ## Generate messages in the 'msg' folder
- add_message_files(
-   FILES
-   Data.msg
-   dataToBig.msg
-   dataToSmall.msg
-   plannerState.msg
-   position.msg
-   missiontomain.msg
-   maintomission.msg
- )
+# add_message_files(
+#   FILES
+#   Message1.msg
+#   Message2.msg
+# )
 
 ## Generate services in the 'srv' folder
- add_service_files(
-   FILES
-   goap_srv.srv
-   mission_srv.srv
-   cup_camera.srv
-   ns.srv
-   cup.srv
- )
+# add_service_files(
+#   FILES
+#   Service1.srv
+#   Service2.srv
+# )
 
 ## Generate actions in the 'action' folder
 # add_action_files(
@@ -87,12 +70,10 @@ find_package(catkin REQUIRED COMPONENTS
 # )
 
 ## Generate added messages and services with any dependencies listed here
- generate_messages(
-   DEPENDENCIES
-   geometry_msgs
-   std_msgs
-
- )
+# generate_messages(
+#   DEPENDENCIES
+#   sensor_msgs#   std_msgs
+# )
 
 ################################################
 ## Declare ROS dynamic reconfigure parameters ##
@@ -124,21 +105,9 @@ find_package(catkin REQUIRED COMPONENTS
 ## CATKIN_DEPENDS: catkin_packages dependent projects also need
 ## DEPENDS: system dependencies of this project that dependent projects also need
 catkin_package(
-  INCLUDE_DIRS include
-  LIBRARIES main2021
-  CATKIN_DEPENDS
-   geometry_msgs
-   roscpp
-   rospy
-   std_msgs
-   message_runtime
-   message_filters
-   nav_msgs
-#   sensor_msgs
-   tf2
-   tf2_geometry_msgs
-   tf2_msgs
-   tf2_ros
+#  INCLUDE_DIRS include
+#  LIBRARIES cupDetection
+#  CATKIN_DEPENDS cv_bridge image_transport roscpp sensor_msgs std_msgs
 #  DEPENDS system_lib
 )
 
@@ -149,15 +118,14 @@ catkin_package(
 ## Specify additional locations of header files
 ## Your package locations should be listed before other locations
 include_directories(
-  include
+# include
   ${catkin_INCLUDE_DIRS}
 )
 
 ## Declare a C++ library
-# add_library(
-#    #${PROJECT_NAME}
-#    #src/${PROJECT_NAME}/main2021.cpp
-#  )
+# add_library(${PROJECT_NAME}
+#   src/${PROJECT_NAME}/cupDetection.cpp
+# )
 
 ## Add cmake target dependencies of the library
 ## as an example, code may need to be generated before libraries
@@ -167,13 +135,7 @@ include_directories(
 ## Declare a C++ executable
 ## With catkin_make all packages are built within a single CMake context
 ## The recommended prefix ensures that target names across packages don't collide
-# add_executable(${PROJECT_NAME}_node src/main2021_node.cpp)
-add_executable(main src/main.cpp src/state.cpp src/friend_state.cpp src/goap_state.cpp src/position_state.cpp src/mission_state.cpp)
-# add_dependencies(main ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
-add_executable(Data src/Data.cpp src/data_state.cpp)
-add_executable(mission_simple src/mission_simple.cpp src/mission_action.cpp)
-add_executable(cameraTest src/cameraTest.cpp)
-#add_executable(state src/main.cpp)
+# add_executable(${PROJECT_NAME}_node src/cupDetection_node.cpp)
 
 ## Rename C++ executable without prefix
 ## The above recommended prefix causes long target names, the following renames the
@@ -184,22 +146,11 @@ add_executable(cameraTest src/cameraTest.cpp)
 ## Add cmake target dependencies of the executable
 ## same as for the library above
 # add_dependencies(${PROJECT_NAME}_node ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
-#add_dependencies(state ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
-#add_dependencies(main Data_gencpp)
-#add_dependencies(main dataToBig_gencpp)
-#add_dependencies(main dataToSmall_gencpp)
-#add_dependencies(main plannerState_gencpp)
-#add_dependencies(main position_gencpp)
-#add_dependencies(main goap_srv_gencpp)
-#add_dependencies(main mission_srv_gencpp)
 
 ## Specify libraries to link a library or executable target against
-#target_link_libraries(${PROJECT_NAME}_node ${catkin_LIBRARIES})
-#target_link_libraries(state ${catkin_LIBRARIES})
-target_link_libraries(main ${catkin_LIBRARIES})
-target_link_libraries(Data ${catkin_LIBRARIES})
-target_link_libraries(mission_simple ${catkin_LIBRARIES})
-target_link_libraries(cameraTest ${catkin_LIBRARIES})
+# target_link_libraries(${PROJECT_NAME}_node
+#   ${catkin_LIBRARIES}
+# )
 
 #############
 ## Install ##
@@ -210,7 +161,7 @@ target_link_libraries(cameraTest ${catkin_LIBRARIES})
 
 ## Mark executable scripts (Python etc.) for installation
 ## in contrast to setup.py, you can choose the destination
-# catkin_install_python(PROGRAMS
+# install(PROGRAMS
 #   scripts/my_python_script
 #   DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
 # )
@@ -248,10 +199,23 @@ target_link_libraries(cameraTest ${catkin_LIBRARIES})
 #############
 
 ## Add gtest based cpp test target and link libraries
-# catkin_add_gtest(${PROJECT_NAME}-test test/test_main2021.cpp)
+# catkin_add_gtest(${PROJECT_NAME}-test test/test_cupDetection.cpp)
 # if(TARGET ${PROJECT_NAME}-test)
 #   target_link_libraries(${PROJECT_NAME}-test ${PROJECT_NAME})
 # endif()
 
 ## Add folders to be run by python nosetests
 # catkin_add_nosetests(test)
+
+
+
+find_package(OpenCV)
+include_directories(${OpenCV_INCLUDE_DIRS})
+add_executable(cupDetect src/cupDetect.cpp)
+target_link_libraries(cupDetect ${catkin_LIBRARIES} ${OpenCV_LIBRARIES})
+##add_executable(listener src/listener.cpp)
+##target_link_libraries(listener ${catkin_LIBRARIES} ${OpenCV_LIBRARIES})
+add_executable(cupDetectWithFunction src/cupDetectWithFunction.cpp)
+target_link_libraries(cupDetectWithFunction ${catkin_LIBRARIES} ${OpenCV_LIBRARIES})
+add_executable(cv_test src/cv_test.cpp)
+target_link_libraries(cv_test ${catkin_LIBRARIES} ${OpenCV_LIBRARIES})

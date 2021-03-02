@@ -14,26 +14,31 @@ typedef struct c
 }CUP;
 
 CUP cup[16] = {
-    {.pos = pair<float, float>(1200., 300.), .color = 2}, {.pos = pair<float, float>(1085., 445.), .color = 3},
-    {.pos = pair<float, float>(515., 445.), .color = 2}, {.pos = pair<float, float>(400., 300.), .color = 3},
-    {.pos = pair<float, float>(100., 670.), .color = 2}, {.pos = pair<float, float>(400., 956.), .color = 3},
-    {.pos = pair<float, float>(800., 1100.), .color = 2}, {.pos = pair<float, float>(1200., 1270.), .color = 3},
-    {.pos = pair<float, float>(1200., 1730.), .color = 2}, {.pos = pair<float, float>(800., 1900.), .color = 3},
-    {.pos = pair<float, float>(400., 2044.), .color = 2}, {.pos = pair<float, float>(100., 2330.), .color = 3},
-    {.pos = pair<float, float>(1655., 1665.), .color = 2}, {.pos = pair<float, float>(1655., 1935.), .color = 3},
-    {.pos = pair<float, float>(1955., 1605.), .color = 3}, {.pos = pair<float, float>(1955., 1995.), .color = 2}
+    {.pos = pair<float, float>(1200, 300), .color = 2}, {.pos = pair<float, float>(1085, 445), .color = 3},
+    {.pos = pair<float, float>(515, 445), .color = 2}, {.pos = pair<float, float>(400, 300), .color = 3},
+    {.pos = pair<float, float>(100, 670), .color = 2}, {.pos = pair<float, float>(400, 956), .color = 3},
+    {.pos = pair<float, float>(800, 1100), .color = 2}, {.pos = pair<float, float>(1200, 1270), .color = 3},
+    {.pos = pair<float, float>(1200, 1730), .color = 2}, {.pos = pair<float, float>(800, 1900), .color = 3},
+    {.pos = pair<float, float>(400, 2044), .color = 2}, {.pos = pair<float, float>(100, 2330), .color = 3},
+    {.pos = pair<float, float>(1655, 1665), .color = 2}, {.pos = pair<float, float>(1655, 1935), .color = 3},
+    {.pos = pair<float, float>(1955, 1605), .color = 3}, {.pos = pair<float, float>(1955, 1995), .color = 2}
 };
 
 
 bool callbackfun(main2021::cup_camera::Request &req, main2021::cup_camera::Response &res){
-    if(req.call == true){
+    ROS_INFO("call");
+    if(req.req == true){
+        res.color.clear();
+        res.cup_pos.clear();
         for(int i = 0 ; i < 16 ; i ++){
-            res.color[i] = cup[i].color;
-            res.cup_pos[i*2] = cup[i].pos.first;
-            res.cup_pos[i*2+1] = cup[i].pos.second;
+            ROS_INFO("TRUE");
+            res.color.push_back(cup[i].color);
+            res.cup_pos.push_back(cup[i].pos.first);
+            res.cup_pos.push_back(cup[i].pos.second);
         }
     }
     else{
+        ROS_INFO("FALSE");
         res.color = {0};
         res.cup_pos = {0};
     }
@@ -45,9 +50,19 @@ int main(int argc, char** argv){
     ros::NodeHandle n;
     ros::ServiceServer c_srv;
     c_srv = n.advertiseService("cup_camera", callbackfun);
+    
+    // while (ros::ok())
+    // {
+        for(int j = 0 ; j < 16 ; j++){
+            ROS_INFO("X:%f", cup[j].pos.first);
+            ROS_INFO("Y:%f", cup[j].pos.second);
+            ROS_INFO("COLOR:%d", cup[j].color);
+        }
+            
+        ROS_INFO("CAMERA");
+        ros::spin();        
+    // }
 
-    ROS_INFO("CAMERA");
-    ros::spin();
 
     return 0;
 }

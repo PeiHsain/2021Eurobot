@@ -2,8 +2,11 @@
 #define DATA_STATE_H_
 
 #include <ros/ros.h>
+#include <std_msgs/String.h>
 #include "main2021/Data.h"
 #include "main2021/cup_camera.h"
+#include "main2021/ns.h"
+#include "main2021/cup.h"
 
 #include "../include/main2021/data_state.h"
 
@@ -25,8 +28,9 @@ class data_state{
 public:
 	data_state();
 	void initial_cup_pos();
+	void callNS(int);
+	void callCup(int);
 	void callCamera(bool);
-
 
 	float get_sx();
 	float get_sy();
@@ -56,7 +60,11 @@ public:
 
 private:
 	ros::NodeHandle h;
-	ros::Subscriber sub_data;
+
+	ros::ServiceClient client_ns;
+	main2021::ns ns_srv;
+	ros::ServiceClient client_cup;
+	main2021::cup cup_srv;
 	ros::ServiceClient client_camera;
 	main2021::cup_camera c_srv;
 
@@ -76,9 +84,10 @@ private:
 	
 	vector<int> action_list;
 	vector<int> cup_color;
-	vector<float> cup_pos;
+	vector<int> camera_cup_color;
+	vector<float> camera_cup_pos;
 	int cup;
-	bool ns;
+	int ns;
 	bool team;
 	int status;
 	CUP bc[24];

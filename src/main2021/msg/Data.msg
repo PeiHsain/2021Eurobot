@@ -4,10 +4,8 @@ int32[] big_action
 int32[] small_action
 int32[] big_action_list
 int32[] small_action_list
-int32[] cup_color
 int32 big_cup
 int32 small_cup
-bool ns
 bool team
 int32 status
 

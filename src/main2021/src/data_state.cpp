@@ -1,8 +1,12 @@
 #include <ros/ros.h>
+#include <std_msgs/String.h>
 #include "main2021/Data.h"
 #include "main2021/cup_camera.h"
+#include "main2021/ns.h"
+#include "main2021/cup.h"
 
 #include "../include/main2021/data_state.h"
+
 
 #include <iostream>
 #include <stdlib.h>
@@ -11,10 +15,15 @@
 using namespace std;
 
 data_state::data_state(){
-	//sub_data = h.subscribe<main2021::Data>("giveToData", 1000, &data_state::datacallback, this);
-	client_camera = h.serviceClient<main2021::cup_camera>("cup_camera", 1000);
+	//ns--> 0:n 1:s
+	client_ns = h.serviceClient<main2021::ns>("cup_service");
+	//array--> 1:red 0:green
+	client_cup = h.serviceClient<main2021::cup>("ns_service");
+	client_camera = h.serviceClient<main2021::cup_camera>("cup_camera");
 
-	c_srv.request.call = false;
+	ns_srv.request.OAO = false;
+	cup_srv.request.OUO = false;
+	c_srv.request.req = false;
 
 	sx = 0;
 	sy = 0;
@@ -31,7 +40,9 @@ data_state::data_state(){
 	bcup = 65535;
 
 	action_list = {0, 0, 0, 0 ,0 ,0 ,0 ,0 ,0 ,0 ,0 ,0 ,0 ,0 ,0};
-	cup_color = {0};
+	cup_color = {0, 0, 0, 0, 0};
+	camera_cup_color = {0};
+	camera_cup_pos = {0};
 	cup = 65535;
 	ns = 0;
 	team = 0;
@@ -73,21 +84,46 @@ void data_state::initial_cup_pos(){
 		bc[22] = {.num = 23, .pos = pair<float, float>(0., 0.), .color = 3, .state = false}; bc[23] = {.num = 24, .pos = pair<float, float>(0., 0.), .color = 3, .state = false};
 	}
 }
+void data_state::callNS(int req){
+	ns_srv.request.OAO = req;
+	int i = 0;
+	while (i == 0)
+	{
+		if(client_ns.call(ns_srv)){
+			ROS_INFO("GET NS");
+			ns = ns_srv.response.ns;
+			i = 1;			
+		}
+	}
+	
+}
+void data_state::callCup(int req){
+	cup_srv.request.OUO = req;
+	int i = 0;
+	while (i == 0)
+	{
+		if(client_cup.call(cup_srv)){
+			// ROS_INFO("GET NS");
+			cup_color.assign(cup_srv.response.CupResult.begin(), cup_srv.response.CupResult.end());
+			i = 1;			
+		}
+	}
+}
 void data_state::callCamera(bool req){
-	 c_srv.request.call = req;
+	 c_srv.request.req = req;
 
-	// int i = 0;
-	// while(i == 0){
-		//ROS_INFO("call");
+	int i = 0;
+	while(i == 0){
+		// ROS_INFO("call");
 		if(client_camera.call(c_srv)){
 			// ROS_INFO("CUP");
-			cup_color.assign(c_srv.response.color.begin(), c_srv.response.color.end());
-			cup_pos.assign(c_srv.response.cup_pos.begin(), c_srv.response.cup_pos.end());
-			// i = 1;			
+			camera_cup_color.assign(c_srv.response.color.begin(), c_srv.response.color.end());
+			camera_cup_pos.assign(c_srv.response.cup_pos.begin(), c_srv.response.cup_pos.end());
+			i = 1;			
 		}
-		// else
-			// ROS_INFO("fail call");
-	// }
+		else
+			ROS_INFO("fail call");
+	}
 	
 	unityCup();
 }
@@ -128,15 +164,17 @@ void data_state::unityAction(){
 void data_state::tf_cup(){
 	int radiu = 0;
 	cup = 65535;
+	// ROS_INFO("TF");
 	for(int i = 0 ; i < 24 ; i++){
-		for(int j = 0 ; j <= cup_pos.size() ; j += 2){
-			radiu = (cup_pos[j] - bc[i].pos.first)*(cup_pos[j] - bc[i].pos.first) + (cup_pos[j+1] - bc[i].pos.second)*(cup_pos[j+1] - bc[i].pos.second);
+		for(int j = 0 ; j <= camera_cup_pos.size() ; j += 2){
+			// ROS_INFO("TF_C");
+			radiu = (camera_cup_pos[j] - bc[i].pos.first)*(camera_cup_pos[j] - bc[i].pos.first) + (camera_cup_pos[j+1] - bc[i].pos.second)*(camera_cup_pos[j+1] - bc[i].pos.second);
 			if(radiu > 30*30){
 				bc[i].state = false;
 				break;
 			}
 			else{
-				if(bc[i].color != cup_color[j/2]){
+				if(bc[i].color != camera_cup_color[j/2]){
 					bc[i].state = false;
 					break;
 				}	
@@ -144,14 +182,17 @@ void data_state::tf_cup(){
 					bc[i].state = true;
 			}		
 		}
-		if(bc[i].state == false)
+		if(bc[i].state == false){
+			// ROS_INFO("TF_F");
 			cup = cup ^ (1 << i);
+		}
+
 	}
 }
 
 void data_state::unityCup(){
 	//cup = 65535;
-	// tf_cup();
+	tf_cup();
 	cup = cup & (scup & bcup);
 	//ROS_INFO("UNITY");
 }
@@ -172,10 +213,6 @@ void data_state::datacallback(const main2021::Data::ConstPtr& msg){
 	baction.assign(msg->big_action.begin(), msg->big_action.end());
 	baction_list.assign(msg->big_action_list.begin(), msg->big_action_list.end());
 	bcup = msg->big_cup;
-
-	//from camera
-	cup_color.assign(msg->cup_color.begin(), msg->cup_color.end());
-	ns = msg->ns;
 
 	team = msg->team;
 	status = msg->status;

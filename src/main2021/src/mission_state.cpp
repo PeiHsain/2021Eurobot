@@ -71,7 +71,9 @@ void mission_data::set_hand(std::vector<int>* h){
     hand.assign(h->begin(), h->end());
 }
 
-int mission_data::getstate(State sta, goap_data g){ 
+int mission_data::getstate(State sta, goap_data g){
+    ros::spinOnce();
+
     if(status == 1){
         set_hand(&sta.get_hand());
         update_hand(g.getaction(), g.get_action_hand());

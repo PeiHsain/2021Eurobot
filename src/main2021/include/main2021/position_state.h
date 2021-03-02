@@ -55,7 +55,7 @@ private:
     ros::Subscriber sub_location;
 
     tf2::Quaternion odom_quat;
-    geometry_msgs::TransformStamped transformStamped;
+    geometry_msgs::PoseStamped transformStamped;
 
     float e1_x;
     float e1_y;

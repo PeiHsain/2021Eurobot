@@ -19,7 +19,7 @@
 
 using namespace std;
 
-#define BEBLOCK 10*10
+#define BEBLOCK 10*10 //mm
 enum Status {STRATEGY = 0, RESET, UPDATE_DATA, GET_AGENT2, READY, RUN};
 enum Mode {EMERGENCY = 0, NORMAL};
 extern enum STATE state;// {FALSE = 0, SUCCESS, DOING, emerg};
@@ -105,10 +105,7 @@ int main(int argc, char** argv)
     //ROS initial
     ros::init(argc, argv, "main_node");
     ros::NodeHandle nh;
-    
-    // ros::ServiceClient client_mission = nh.serviceClient<main2021::mission_srv>("mission");
-    // ros::Publisher pub_mission = nh.advertise<main2021::maintomission>("giveToData", 1000);
-    // ros::Subscriber sub_mission = nh.subscribe<main2021::missiontomain>("DataToBig", 1000, m_res);
+
     ros::Publisher pub_data = nh.advertise<main2021::Data>("giveToData", 1000);
     ros::Subscriber sub_data = nh.subscribe<main2021::dataToBig>("DataToBig", 1000, datacallback);
     //ros::Subscriber sub_data = nh.subscribe<main2021::dataToSmall>("DataToSmall", 1000, datacallback);
@@ -129,10 +126,8 @@ int main(int argc, char** argv)
     give_data.small_action = {0, 0};
     give_data.big_action_list = {0, 0, 0, 0 ,0 ,0 ,0 ,0 ,0 ,0 ,0 ,0 ,0 ,0 ,0};
     give_data.small_action_list = {0, 0, 0, 0 ,0 ,0 ,0 ,0 ,0 ,0 ,0 ,0 ,0 ,0 ,0};
-    give_data.cup_color = {0, 0, 0, 0, 0};
     give_data.big_cup = 65535;
     give_data.small_cup = 65535;
-    give_data.ns = 0;
     give_data.team = 0;
     give_data.status = 0;
 
@@ -164,6 +159,7 @@ int main(int argc, char** argv)
         }
         //To Do********
         // if(cont != 1)
+        
         states.setpos(position.get_px(), position.get_py(), position.get_pz(), position.getdegree());
         ROS_INFO("----------------");
 
@@ -181,6 +177,8 @@ int main(int argc, char** argv)
                 give_data.status = states.get_status();
                 //cont++;
                 //change++;
+                states.set_team(team);
+                
                 //call localization to get my position   
                 ROS_INFO("RESET");
                 break;
@@ -206,6 +204,10 @@ int main(int argc, char** argv)
                 //cont++;
                 //change++;
                 give_data.status = states.get_status();
+
+                // states.set_ns(ns);
+                // states.set_color(&cup_color);
+
                 friends.setf_x(fx);
                 friends.setf_y(fy);
                 friends.setf_z(0);
@@ -213,7 +215,7 @@ int main(int argc, char** argv)
                 friends.setf_action(&faction);
                 ROS_INFO("GET_AGENT2");
                 break;
-            case READY://等拔插銷
+            case READY://等拔插銷 from ST1
                 give_data.status = states.get_status();
                 //cont++;
                 //change++;
@@ -327,7 +329,7 @@ int main(int argc, char** argv)
                         //planner state update
                         states.set_p_state(position.get_p_state());
                         states.set_m_state(mission.getstate(states, goap));
-
+                        ROS_INFO("M:%d", states.get_m_state());
                         ROS_INFO("NOW:%d", goap.getaction());
                         if(states.get_m_state() == SUCCESS){
                             action_list[goap.getaction()] = 1;

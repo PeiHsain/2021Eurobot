@@ -18,6 +18,7 @@ public:
 
     std::vector<int>& get_hand();
     std::vector<int>& get_list();
+    std::vector<int>& get_color();
     int get_cup();
     bool get_ns();
     bool get_team();
@@ -32,6 +33,7 @@ public:
     void setpos(float, float, float, float);
     void set_hand(std::vector<int>*);
     void set_list(std::vector<int>*);
+    void set_color(std::vector<int>*);
     void set_cup(int, int);
     void updatecup(int);
     void set_ns(bool);

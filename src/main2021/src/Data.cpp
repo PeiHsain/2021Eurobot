@@ -38,7 +38,8 @@ int main(int argc, char** argv){
 		//To Do******
 		//ROS_INFO("Data: %d", state.now_status());
 		switch(state.now_status()){
-			case 0://戰術選擇
+			case 0://戰術選擇 --> team, enemy
+				//from launch file
 				now_status = 1;
 				ROS_INFO("SWITCH 1");
 				cameraCall = false;
@@ -49,6 +50,8 @@ int main(int argc, char** argv){
 				cameraCall = false;
 				break;
 			case 2://更新Data
+				// state.callNS(true);
+				// state.callCup(true);
 				now_status = 3;
 				ROS_INFO("SWITCH 3");
 				cameraCall = true;
@@ -58,7 +61,9 @@ int main(int argc, char** argv){
 				ROS_INFO("SWITCH 4");
 				cameraCall = false;
 				break;
-			case 4://等拔插銷
+			case 4://等拔插銷 from ST1
+				//To Do******
+				//wait for ST1
 				now_status = 5;
 				ROS_INFO("SWITCH 5");
 				cameraCall = false;

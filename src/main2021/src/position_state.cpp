@@ -27,7 +27,7 @@ using namespace std;
 
 Position::Position(){
     sub_planner = n.subscribe<main2021::plannerState>("plan_state", 1, &Position::P_callback, this);
-    pub_planner = n.advertise<geometry_msgs::PoseStamped>("move_base_simple/goal", 1000);
+    pub_planner = n.advertise<geometry_msgs::PoseStamped>("/move_base_simple/goal", 1000);
     sub_enemy1 = n.subscribe<geometry_msgs::PoseStamped>("/enemy_pose", 1000, &Position::E1_callback, this);
     sub_enemy2 = n.subscribe<geometry_msgs::PoseStamped>("/enemy_pose2", 1000, &Position::E2_callback, this);
     sub_location = n.subscribe<nav_msgs::Odometry>("/global_filter", 1000, &Position::L_callback, this);
@@ -47,14 +47,19 @@ Position::Position(){
 }
 
 void Position::give_plan(float action_x, float action_y, float action_th){
-    transformStamped.transform.translation.x = action_x;
-    transformStamped.transform.translation.y = action_y;
-    transformStamped.transform.translation.z = 0;
+    transformStamped.header.stamp = ros::Time::now();
+    transformStamped.header.frame_id = "map";
+    //publish is meter
+    transformStamped.pose.position.x = (action_x/1000);//meter
+    transformStamped.pose.position.y = (action_y/1000);//meter
+    transformStamped.pose.position.z = 0;
     odom_quat.setRPY(0, 0, action_th);
-    transformStamped.transform.rotation.x = odom_quat.x();
-    transformStamped.transform.rotation.y = odom_quat.y();
-    transformStamped.transform.rotation.z = odom_quat.z();
-    transformStamped.transform.rotation.w = odom_quat.w();
+    transformStamped.pose.orientation.x = odom_quat.x();
+    transformStamped.pose.orientation.y = odom_quat.y();
+    transformStamped.pose.orientation.z = odom_quat.z();
+    transformStamped.pose.orientation.w = odom_quat.w();
+
+    pub_planner.publish(transformStamped);
 }
 
 void Position::P_callback(const main2021::plannerState::ConstPtr& msg){
@@ -62,17 +67,20 @@ void Position::P_callback(const main2021::plannerState::ConstPtr& msg){
     p_state.assign(msg->plan_state.begin(), msg->plan_state.end());
 }
 void Position::E1_callback(const geometry_msgs::PoseStamped::ConstPtr& msg){
-    e1_x = msg->pose.position.x;
-    e1_y = msg->pose.position.y;
+    //receive is meter
+    e1_x = msg->pose.position.x * 1000;
+    e1_y = msg->pose.position.y * 1000;
 }
 void Position::E2_callback(const geometry_msgs::PoseStamped::ConstPtr& msg){
-    e2_x = msg->pose.position.x;
-    e2_y = msg->pose.position.y;
+    //receive is meter
+    e2_x = msg->pose.position.x * 1000;
+    e2_y = msg->pose.position.y * 1000;
 }
 void Position::L_callback(const nav_msgs::Odometry::ConstPtr& msg){
-    px = msg->pose.pose.position.x;
-    py = msg->pose.pose.position.y;
-    pz = msg->pose.pose.position.z;
+    //receive is meter
+    px = msg->pose.pose.position.x * 1000;
+    py = msg->pose.pose.position.y * 1000;
+    pz = msg->pose.pose.position.z * 1000;
 
     tf2::Quaternion q(msg->pose.pose.orientation.x, msg->pose.pose.orientation.y, msg->pose.pose.orientation.z, msg->pose.pose.orientation.w);
     tf2::Matrix3x3 m(q);
