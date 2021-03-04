@@ -33,7 +33,7 @@ data_state::data_state(){
 	scup = 65535;
 
 	bx = 800;
-	by = 200;
+	by = 2700;
 	bdegree = 0;
 	baction = {0};
 	baction_list = {0, 0, 0, 0 ,0 ,0 ,0 ,0 ,0 ,0 ,0 ,0 ,0 ,0 ,0};
@@ -45,7 +45,7 @@ data_state::data_state(){
 	camera_cup_pos = {0};
 	cup = 65535;
 	ns = 0;
-	team = 0;
+	team = 1;
 
 	//spinonce();
 	initial_cup_pos();

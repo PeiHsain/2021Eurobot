@@ -20,7 +20,7 @@ State::State(float x, float y, float z, float th){
     hand = {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0};
     cup = 65535;
     ns = 0;
-    team = 0;
+    team = 1;
     emerg = false;
     time = 0;
     strategy = 0;
@@ -53,7 +53,11 @@ void State::setpos(float x, float y, float z, float th){
     my_x = x;
     my_y = y;
     my_z = z;
-    degree = th;       
+    degree = th;
+
+    ROS_INFO("state x: %f", my_x);
+    ROS_INFO("state y: %f", my_y);   
+    ROS_INFO("state th: %f", degree);   
 }
 void State::set_hand(std::vector<int>* h){
     hand.assign(h->begin(), h->end());

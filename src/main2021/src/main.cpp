@@ -32,7 +32,7 @@ vector<int> action_list(15, 0);
 vector<int> cup_color(5, 0);
 int cup = 65535;
 bool ns = 0;
-bool team = 0;
+bool team = 1;
 int status = 0;
 float during_time = 0;
 
@@ -120,7 +120,7 @@ int main(int argc, char** argv)
     // m_srv.request.cup = {0};
     // m_srv.request.hand = {0};
 
-    give_data.big_chicken_pos = {800, 200, 0};
+    give_data.big_chicken_pos = {800, 2700, 0};
     give_data.small_chicken_pos = {0, 0, 0};
     give_data.big_action = {0, 0};
     give_data.small_action = {0, 0};
@@ -128,11 +128,11 @@ int main(int argc, char** argv)
     give_data.small_action_list = {0, 0, 0, 0 ,0 ,0 ,0 ,0 ,0 ,0 ,0 ,0 ,0 ,0 ,0};
     give_data.big_cup = 65535;
     give_data.small_cup = 65535;
-    give_data.team = 0;
+    give_data.team = 1;
     give_data.status = 0;
 
     //定義value
-    State states(800., 200., 0., 0.);
+    State states(800., 2700., 0., 0.);
     Friend friends;
     Position position;
     goap_data goap;
@@ -159,7 +159,6 @@ int main(int argc, char** argv)
         }
         //To Do********
         // if(cont != 1)
-        
         states.setpos(position.get_px(), position.get_py(), position.get_pz(), position.getdegree());
         ROS_INFO("----------------");
 
@@ -168,23 +167,17 @@ int main(int argc, char** argv)
             case STRATEGY://戰術選擇
                 //To Do********
                 give_data.status = states.get_status();
-                //cont++;
-                //change++;
                 ROS_INFO("STRATEGY");
                 break;
             case RESET://機構,底盤reset
                 //To Do********
                 give_data.status = states.get_status();
-                //cont++;
-                //change++;
                 states.set_team(team);
                 
                 //call localization to get my position   
                 ROS_INFO("RESET");
                 break;
             case UPDATE_DATA://更新Data
-                //cont++;
-                //change++;
                 give_data.status = states.get_status();
                 give_data.big_chicken_pos[0] = states.getx();
                 give_data.big_chicken_pos[1] = states.gety();
@@ -201,8 +194,6 @@ int main(int argc, char** argv)
                 ROS_INFO("UPDATE_DATA");
                 break;
             case GET_AGENT2://拿另一機的資料
-                //cont++;
-                //change++;
                 give_data.status = states.get_status();
 
                 // states.set_ns(ns);
@@ -359,6 +350,7 @@ int main(int argc, char** argv)
         //ROS_INFO("GIVE DATA");
         pub_data.publish(give_data);
         ros::spinOnce();
+        // position.rx();
     }
     return 0;
 }

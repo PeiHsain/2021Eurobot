@@ -44,6 +44,8 @@ public:
     float get_py();
     float get_pz();
     float getdegree();
+
+    // void rx();
   
 
 private:

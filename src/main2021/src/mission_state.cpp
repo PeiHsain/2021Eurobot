@@ -17,7 +17,7 @@ mission_data::mission_data(){
     sub_mission = n.subscribe<main2021::missiontomain>("missionToMain", 1, &mission_data::m_res, this);
 
     //initial
-    m_msg.team = 0;
+    m_msg.team = 1;
     m_msg.action = 0;
     m_msg.planer_state = 0;
     m_msg.action_pos.push_back(800); //x

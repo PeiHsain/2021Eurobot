@@ -17,14 +17,14 @@ goap_data::goap_data(){
     
     //initial
     g_srv.request.my_pos.push_back(800); //x
-    g_srv.request.my_pos.push_back(200); //y
+    g_srv.request.my_pos.push_back(2700); //y
     g_srv.request.my_pos.push_back(0); //degree
     g_srv.request.friend_pos.push_back(0); //x
     g_srv.request.friend_pos.push_back(0); //y
     g_srv.request.friend_pos.push_back(0); //degree
     g_srv.request.ns = 0;
     g_srv.request.emergency = 0;
-    g_srv.request.team = 0;
+    g_srv.request.team = 1;
     g_srv.request.time = 0;
     g_srv.request.friend_action = {0};
     g_srv.request.action_list = {0, 0, 0, 0 ,0 ,0 ,0 ,0 ,0 ,0 ,0 ,0 ,0 ,0 ,0};

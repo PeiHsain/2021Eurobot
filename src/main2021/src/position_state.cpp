@@ -37,7 +37,7 @@ Position::Position(){
     e2_x = 0.;
     e2_y = 0.;
     px = 800.;
-    py = 200.;
+    py = 2700.;
     pz = 0.;
     p_degree_R = 0;
     p_degree_P = 0;
@@ -68,23 +68,26 @@ void Position::P_callback(const main2021::plannerState::ConstPtr& msg){
 }
 void Position::E1_callback(const geometry_msgs::PoseStamped::ConstPtr& msg){
     //receive is meter
-    e1_x = msg->pose.position.x * 1000;
-    e1_y = msg->pose.position.y * 1000;
+    e1_x = (msg->pose.position.x * 1000);
+    e1_y = (msg->pose.position.y * 1000);
 }
 void Position::E2_callback(const geometry_msgs::PoseStamped::ConstPtr& msg){
     //receive is meter
-    e2_x = msg->pose.position.x * 1000;
-    e2_y = msg->pose.position.y * 1000;
+    e2_x = (msg->pose.position.x * 1000);
+    e2_y = (msg->pose.position.y * 1000);
 }
 void Position::L_callback(const nav_msgs::Odometry::ConstPtr& msg){
     //receive is meter
-    px = msg->pose.pose.position.x * 1000;
-    py = msg->pose.pose.position.y * 1000;
-    pz = msg->pose.pose.position.z * 1000;
+    px = (msg->pose.pose.position.x * 1000);
+    py = (msg->pose.pose.position.y * 1000);
+    pz = (msg->pose.pose.position.z * 1000);
+    // ROS_INFO("position px: %f", px);
+    // ROS_INFO("position py: %f", py);
 
     tf2::Quaternion q(msg->pose.pose.orientation.x, msg->pose.pose.orientation.y, msg->pose.pose.orientation.z, msg->pose.pose.orientation.w);
     tf2::Matrix3x3 m(q);
     m.getRPY(p_degree_P, p_degree_R, p_degree_Y);
+    // ROS_INFO("position th: %f", p_degree_Y);  
 }
 
 //can plan?
@@ -95,8 +98,11 @@ bool Position::findWay(){
         return true;
 }
 int Position::get_p_state(){
+    ros::spinOnce();
+    ROS_INFO("Pcall");
+
     if(findWay())
-        return 1;//p_state[0];
+        return p_state[0];
     else
         return 2;//--> cannot find
 }
@@ -108,3 +114,8 @@ float Position::get_px(){ return px;}
 float Position::get_py(){ return py;}
 float Position::get_pz(){ return pz;}
 float Position::getdegree(){ return (float)p_degree_Y;}
+
+// void Position::rx(){
+//     ros::spinOnce();
+// }
+

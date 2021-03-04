@@ -173,6 +173,7 @@ add_executable(main src/main.cpp src/state.cpp src/friend_state.cpp src/goap_sta
 add_executable(Data src/Data.cpp src/data_state.cpp)
 add_executable(mission_simple src/mission_simple.cpp src/mission_action.cpp)
 add_executable(cameraTest src/cameraTest.cpp)
+add_executable(locationTest src/locationTest.cpp)
 #add_executable(state src/main.cpp)
 
 ## Rename C++ executable without prefix
@@ -200,6 +201,7 @@ target_link_libraries(main ${catkin_LIBRARIES})
 target_link_libraries(Data ${catkin_LIBRARIES})
 target_link_libraries(mission_simple ${catkin_LIBRARIES})
 target_link_libraries(cameraTest ${catkin_LIBRARIES})
+target_link_libraries(locationTest ${catkin_LIBRARIES})
 
 #############
 ## Install ##
