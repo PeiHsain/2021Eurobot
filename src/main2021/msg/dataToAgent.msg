@@ -1,7 +1,7 @@
-float32 small_x
-float32 small_y
-float32 small_degree
-int32[] small_action
+float32 x
+float32 y
+float32 degree
+int32[] action
 int32[] action_list
 int32[] cup_color
 int32 cup

@@ -1,10 +1,6 @@
 #include <ros/ros.h>
 #include "main2021/Data.h"
-#include "main2021/dataToBig.h"
-//#include "main2021/dataToSmall.h"
-// #include "main2021/mission_srv.h"
-// #include "main2021/missiontomain.h"
-// #include "main2021/maintomission.h"
+#include "main2021/dataToAgent.h"
 #include "main2021/plannerState.h"
 
 #include "../include/main2021/state.h"
@@ -48,11 +44,11 @@ int mode = 1;
 
 //int change = 0;
 
-void datacallback(const main2021::dataToBig::ConstPtr& msg){
-    fx = msg->small_x;
-    fy = msg->small_y;
-    fdegree = msg->small_degree;
-    faction.assign(msg->small_action.begin(), msg->small_action.end());
+void datacallback(const main2021::dataToAgent::ConstPtr& msg){
+    fx = msg->x;
+    fy = msg->y;
+    fdegree = msg->degree;
+    faction.assign(msg->action.begin(), msg->action.end());
     action_list.assign(msg->action_list.begin(), msg->action_list.end());
     cup_color.assign(msg->cup_color.begin(), msg->cup_color.end());
     cup = msg->cup;
@@ -63,18 +59,6 @@ void datacallback(const main2021::dataToBig::ConstPtr& msg){
     //ROS_INFO("GETDATA"); 
 }
 
-/*void datacallback(const main2021::dataToSmall::ConstPtr& msg){
-    msg.big_x;
-    msg.big_y;
-    msg.big_degree;
-    msg.small_action;
-    msg.action_list;
-    msg.cup_color;
-    msg.cup;
-    msg.ns;
-    msg.team;
-    msg.time;
-}*/
 bool beBlock(float x, float y, Position p){
     int deltax = 0, deltay = 0;
     deltax = (x - p.get_e1_x())*(x - p.get_e1_x());
@@ -107,12 +91,12 @@ int main(int argc, char** argv)
     ros::NodeHandle nh;
 
     ros::Publisher pub_data = nh.advertise<main2021::Data>("giveToData", 1000);
-    ros::Subscriber sub_data = nh.subscribe<main2021::dataToBig>("DataToBig", 1000, datacallback);
-    //ros::Subscriber sub_data = nh.subscribe<main2021::dataToSmall>("DataToSmall", 1000, datacallback);
+    ros::Subscriber sub_data = nh.subscribe<main2021::dataToAgent>("DataToBig", 1000, datacallback);
+    
     
     // main2021::mission_srv m_srv;
     main2021::Data give_data;
-    main2021::dataToBig data_return;
+    main2021::dataToAgent data_return;
 
     //service initial value
     // m_srv.request.action = {0};
@@ -151,8 +135,13 @@ int main(int argc, char** argv)
         states.set_list(&action_list);
         ROS_INFO("LIST[%d]", goap.getaction());
         //cup_state update
-        //states.updatecup(cup);
+        // states.updatecup(cup);
         ROS_INFO("CUP:%d", states.get_cup());
+        // for (int i = 0; i < 5; i++)
+        // {
+        //     ROS_INFO("COLOR[%d]:%d",i , states.get_color()[i]);
+        // }
+        // ROS_INFO("NS:%d", states.get_ns());
         for (int i = 0; i < 12; i++)
         {
             ROS_INFO("HAND[%d]:%d", (i+1), states.get_hand()[i]);
@@ -196,8 +185,8 @@ int main(int argc, char** argv)
             case GET_AGENT2://拿另一機的資料
                 give_data.status = states.get_status();
 
-                // states.set_ns(ns);
-                // states.set_color(&cup_color);
+                states.set_ns(ns);
+                states.set_color(&cup_color);
 
                 friends.setf_x(fx);
                 friends.setf_y(fy);
@@ -208,6 +197,8 @@ int main(int argc, char** argv)
                 break;
             case READY://等拔插銷 from ST1
                 give_data.status = states.get_status();
+                states.set_ns(ns);
+                states.set_color(&cup_color);
                 //cont++;
                 //change++;
                 ROS_INFO("READY");
@@ -242,6 +233,7 @@ int main(int argc, char** argv)
                             emerg_first = false;
                             ROS_INFO("EMERG FIRST");
                         }
+                        states.set_emerg(true);
                         states.set_p_state(emerg); //planer(emergency);
                         states.set_m_state(emerg); //mission(emergency);
                         ROS_INFO("EMERG P");
@@ -303,13 +295,13 @@ int main(int argc, char** argv)
                                 ROS_INFO("GOAP_M");
                                 goap.give_goap(states, friends, position);
                             }
-                            ROS_INFO("SAME ACTION:%d", goap.sameActionOrNot());
+                            ROS_INFO("SAME ACTION:%d", goap.samePosOrNot());
                             //ROS_INFO("M_DONE");
                         }
 
                         
                         ROS_INFO("P_STATE:%d", states.get_p_state());
-                        if(goap.sameActionOrNot() == false || states.get_p_state() != SUCCESS){
+                        if(goap.samePosOrNot() == false || states.get_p_state() != SUCCESS){
                             ROS_INFO("PLANNER");
                             position.give_plan(goap.get_action_x(), goap.get_action_y(), goap.get_action_th());
                         }

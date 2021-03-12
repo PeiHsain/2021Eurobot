@@ -2,7 +2,7 @@
 #define MISSION_STATE_H_
 
 #include <ros/ros.h>
-#include "main2021/missiontomain.h"
+#include "std_msgs/Int32.h"
 #include "main2021/maintomission.h"
 
 #include "../include/main2021/state.h"
@@ -18,7 +18,7 @@ class mission_data{
 public:
     mission_data();
 
-    void m_res(const main2021::missiontomain::ConstPtr&);
+    void m_res(const std_msgs::Int32::ConstPtr&);
 
     void update_hand(int, int);
 
@@ -36,7 +36,7 @@ private:
     ros::Publisher pub_mission;
     ros::Subscriber sub_mission;
 
-    main2021::missiontomain m_pub;
+    std_msgs::Int32 m_pub;
     main2021::maintomission m_msg;
     
     int status;

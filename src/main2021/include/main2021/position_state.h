@@ -2,7 +2,7 @@
 #define POSITION_STATE_H_
 
 #include <ros/ros.h>
-#include "main2021/plannerState.h"
+#include "std_msgs/Int32MultiArray.h"
 
 //tf2 must
 #include <tf2_ros/transform_broadcaster.h>
@@ -29,7 +29,7 @@ public:
     Position();
 
     void give_plan(float, float, float);
-    void P_callback(const main2021::plannerState::ConstPtr&);
+    void P_callback(const std_msgs::Int32MultiArray::ConstPtr&);
     void E1_callback(const geometry_msgs::PoseStamped::ConstPtr&);
     void E2_callback(const geometry_msgs::PoseStamped::ConstPtr&);
     void L_callback(const nav_msgs::Odometry::ConstPtr&);

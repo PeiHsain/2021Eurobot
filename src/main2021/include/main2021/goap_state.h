@@ -28,7 +28,7 @@ public:
     int get_action_cup();
     int get_action_hand();
 
-    bool sameActionOrNot();
+    bool samePosOrNot();
 
 private:
     ros::NodeHandle n;

@@ -1,8 +1,9 @@
 #include <ros/ros.h>
+#include <std_msgs/String.h>
 #include "main2021/Data.h"
-#include "main2021/dataToBig.h"
-#include "main2021/dataToSmall.h"
+#include "main2021/dataToAgent.h"
 #include "main2021/cup_camera.h"
+#include "main2021/gui_state.h"
 
 #include "../include/main2021/data_state.h"
 
@@ -16,18 +17,26 @@ int main(int argc, char** argv){
     ros::init(argc, argv, "data_node");
     ros::NodeHandle nh;
 
-	ros::Publisher pub_dataBig = nh.advertise<main2021::dataToBig>("DataToBig", 1000);
-	ros::Publisher pub_dataSmall = nh.advertise<main2021::dataToSmall>("DataToSmall", 1000);
+	//give data to chicken
+	ros::Publisher pub_dataBig = nh.advertise<main2021::dataToAgent>("DataToBig", 1000);
+	ros::Publisher pub_dataSmall = nh.advertise<main2021::dataToAgent>("DataToSmall", 1000);
 	
-	main2021::dataToBig big;
-	main2021::dataToSmall small;
+	main2021::dataToAgent big;
+	main2021::dataToAgent small;
+
+	//time
 	ros::Time begin_time;
 	ros::Time now_time;
 
+	//data
+	GUI gui;
 	data_state state;
 	ros::Subscriber sub_data = nh.subscribe<main2021::Data>("giveToData", 1000, &data_state::datacallback, &state);
 
+	int start = 0;
 	int now_status = 0;
+	int cupCall = 0;
+	int nsCall = 0;
 	bool firstrun = false;
 	bool cameraCall = false;
 	float doing_time = 0;
@@ -36,37 +45,45 @@ int main(int argc, char** argv){
 		ROS_INFO("Data FALSE");
 	while(ros::ok()){
 		//To Do******
-		//ROS_INFO("Data: %d", state.now_status());
+		if(now_status < 4)
+			now_status = gui.changState();
 		switch(state.now_status()){
 			case 0://戰術選擇 --> team, enemy
 				//from launch file
-				now_status = 1;
-				ROS_INFO("SWITCH 1");
+				
+				ROS_INFO("STATE 0");
 				cameraCall = false;
+				now_status = gui.changState();
 				break;
 			case 1://機構,底盤reset
-				now_status = 2;
-				ROS_INFO("SWITCH 2");
+				
+				ROS_INFO("STATE 1");
 				cameraCall = false;
+				// now_status = 2;
 				break;
-			case 2://更新Data
-				// state.callNS(true);
-				// state.callCup(true);
-				now_status = 3;
-				ROS_INFO("SWITCH 3");
+			case 2://更新Data, reset
+				
+				ROS_INFO("STATE 2");
+				cupCall = 1;
+				nsCall = 1;
+				// state.callNS(1);
+				// state.callCup(1);				
 				cameraCall = true;
+				// now_status = 3;
 				break;
 			case 3://拿另一機的資料
-				now_status = 4;
-				ROS_INFO("SWITCH 4");
+				ROS_INFO("STATE 3");
 				cameraCall = false;
+				// now_status = 4;
 				break;
 			case 4://等拔插銷 from ST1
 				//To Do******
 				//wait for ST1
-				now_status = 5;
-				ROS_INFO("SWITCH 5");
+				nh.getParam("/start", start);
+				ROS_INFO("STATE 4");
 				cameraCall = false;
+				if(start >= 1)
+					now_status = 5;
 				break;
 			case 5://run
 				if(firstrun == false){
@@ -79,14 +96,18 @@ int main(int argc, char** argv){
 				// ROS_INFO("TIME:%f", doing_time);
 				break;      
 		}
+		gui.pubToGUI(now_status);
+
 		//ROS_INFO("NOWSTATUS:%d", now_status);
 		state.unityAction();
 		state.callCamera(cameraCall);
+		// state.callNS(cupCall);
+		// state.callNS(nsCall);
 		//give big chicken
-		big.small_x = state.get_sx();
-		big.small_y = state.get_sy();
-		big.small_degree = state.get_sdegree();
-		big.small_action.assign(state.get_saction().begin(), state.get_saction().end());
+		big.x = state.get_sx();
+		big.y = state.get_sy();
+		big.degree = state.get_sdegree();
+		big.action.assign(state.get_saction().begin(), state.get_saction().end());
 		big.action_list.assign(state.get_list().begin(), state.get_list().end());
 		big.cup_color.assign(state.get_color().begin(), state.get_color().end());
 		big.cup = state.get_cup();
@@ -98,10 +119,10 @@ int main(int argc, char** argv){
 		pub_dataBig.publish(big);
 		//ROS_INFO("BIG");
 		//give small chicken
-		small.big_x = state.get_bx();
-		small.big_y = state.get_by();
-		small.big_degree = state.get_bdegree();
-		small.big_action.assign(state.get_baction().begin(), state.get_baction().end());
+		small.x = state.get_bx();
+		small.y = state.get_by();
+		small.degree = state.get_bdegree();
+		small.action.assign(state.get_baction().begin(), state.get_baction().end());
 		small.action_list.assign(state.get_list().begin(), state.get_list().end());
 		small.cup_color.assign(state.get_color().begin(), state.get_color().end());
 		small.cup = state.get_cup();
@@ -111,6 +132,7 @@ int main(int argc, char** argv){
 		small.status = now_status;
 
 		pub_dataSmall.publish(small);
+
 		ros::spinOnce();
 		//state.spinonce();
 	}

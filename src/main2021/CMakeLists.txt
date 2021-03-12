@@ -61,8 +61,7 @@ find_package(catkin REQUIRED COMPONENTS
  add_message_files(
    FILES
    Data.msg
-   dataToBig.msg
-   dataToSmall.msg
+   dataToAgent.msg
    plannerState.msg
    position.msg
    missiontomain.msg
@@ -170,7 +169,7 @@ include_directories(
 # add_executable(${PROJECT_NAME}_node src/main2021_node.cpp)
 add_executable(main src/main.cpp src/state.cpp src/friend_state.cpp src/goap_state.cpp src/position_state.cpp src/mission_state.cpp)
 # add_dependencies(main ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
-add_executable(Data src/Data.cpp src/data_state.cpp)
+add_executable(Data src/Data.cpp src/data_state.cpp src/gui_state.cpp)
 add_executable(mission_simple src/mission_simple.cpp src/mission_action.cpp)
 add_executable(cameraTest src/cameraTest.cpp)
 add_executable(locationTest src/locationTest.cpp)

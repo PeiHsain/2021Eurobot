@@ -139,8 +139,8 @@ int goap_data::get_action_cup(){
 int goap_data::get_action_hand(){
     return now_hand;
 }
-bool goap_data::sameActionOrNot(){
-    if(now_action == oldaction[0] && now_x == oldpos[0] && now_y == oldpos[1] && now_th == oldpos[2] && now_cup == oldcup[0] && now_cup == oldcup[1])
+bool goap_data::samePosOrNot(){
+    if(now_x == oldpos[0] && now_y == oldpos[1] && now_th == oldpos[2])// now_action == oldaction[0] && && now_cup == oldcup[0] && now_cup == oldcup[1])
         return true;
     else
         return false;

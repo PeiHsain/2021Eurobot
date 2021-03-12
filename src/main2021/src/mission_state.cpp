@@ -1,5 +1,5 @@
 #include <ros/ros.h>
-#include "main2021/missiontomain.h"
+#include "std_msgs/Int32.h"
 #include "main2021/maintomission.h"
 
 #include "../include/main2021/mission_state.h"
@@ -14,24 +14,25 @@
 
 mission_data::mission_data(){
     pub_mission = n.advertise<main2021::maintomission>("mainToMission", 1000);
-    sub_mission = n.subscribe<main2021::missiontomain>("missionToMain", 1, &mission_data::m_res, this);
+    sub_mission = n.subscribe<std_msgs::Int32>("missionToMain", 1, &mission_data::m_res, this);
 
     //initial
     m_msg.team = 1;
     m_msg.action = 0;
     m_msg.planer_state = 0;
     m_msg.action_pos.push_back(800); //x
-    m_msg.action_pos.push_back(200); //y
+    m_msg.action_pos.push_back(2700); //y
     m_msg.action_pos.push_back(0); //degree
     m_msg.cup = {0, 0};
     m_msg.hand = {0, 0, 0, 0 ,0 ,0 ,0 ,0 ,0 ,0 ,0 ,0};
+    m_msg.emerg = false;
 
     //0:FALSE 1:SUCCES 2:DOING 3:EMERG
     status = 0;
 }
 
-void mission_data::m_res(const main2021::missiontomain::ConstPtr& msg){
-    status = msg->state;
+void mission_data::m_res(const std_msgs::Int32::ConstPtr& msg){
+    status = msg->data;
 }
 
 void mission_data::update_hand(int a, int h){
@@ -60,6 +61,7 @@ void mission_data::give_mission(State sta, goap_data g){
     m_msg.cup[0] = g.get_action_cup(); //action_cup
     m_msg.cup[1] = g.get_action_hand(); //action_hand
     m_msg.hand.assign(sta.get_hand().begin(), sta.get_hand().end()); //hand_status
+    m_msg.emerg = sta.emergOrNot();
 
     pub_mission.publish(m_msg);
 }
@@ -78,6 +80,7 @@ int mission_data::getstate(State sta, goap_data g){
         set_hand(&sta.get_hand());
         update_hand(g.getaction(), g.get_action_hand());
     }
+    // ROS_INFO("MISSIONSTATE:%d", status);
     return status;
 }
 std::vector<int>& mission_data::get_hand(){ return hand;}

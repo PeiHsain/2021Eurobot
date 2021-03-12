@@ -16,13 +16,13 @@ using namespace std;
 
 data_state::data_state(){
 	//ns--> 0:n 1:s
-	client_ns = h.serviceClient<main2021::ns>("cup_service");
+	client_ns = h.serviceClient<main2021::ns>("ns_service");
 	//array--> 1:red 0:green
-	client_cup = h.serviceClient<main2021::cup>("ns_service");
+	client_cup = h.serviceClient<main2021::cup>("cup_service");
 	client_camera = h.serviceClient<main2021::cup_camera>("cup_camera");
 
-	ns_srv.request.OAO = false;
-	cup_srv.request.OUO = false;
+	ns_srv.request.ask_ns = 0;
+	cup_srv.request.ask_cup = 0;
 	c_srv.request.req = false;
 
 	sx = 0;
@@ -44,7 +44,7 @@ data_state::data_state(){
 	camera_cup_color = {0};
 	camera_cup_pos = {0};
 	cup = 65535;
-	ns = 0;
+	ns = 1;
 	team = 1;
 
 	//spinonce();
@@ -84,31 +84,46 @@ void data_state::initial_cup_pos(){
 		bc[22] = {.num = 23, .pos = pair<float, float>(0., 0.), .color = 3, .state = false}; bc[23] = {.num = 24, .pos = pair<float, float>(0., 0.), .color = 3, .state = false};
 	}
 }
+
+//NS service
 void data_state::callNS(int req){
-	ns_srv.request.OAO = req;
+	ns_srv.request.ask_ns = req;
 	int i = 0;
 	while (i == 0)
 	{
 		if(client_ns.call(ns_srv)){
 			ROS_INFO("GET NS");
-			ns = ns_srv.response.ns;
-			i = 1;			
+			ns = ns_srv.response.ns_result;
+			ROS_INFO("NS:%d", ns);
+			i = 1;
 		}
+		else
+			ROS_INFO("ns fail call");
 	}
 	
 }
+
+//cup color service
 void data_state::callCup(int req){
-	cup_srv.request.OUO = req;
+	cup_srv.request.ask_cup = req;
 	int i = 0;
 	while (i == 0)
 	{
 		if(client_cup.call(cup_srv)){
 			// ROS_INFO("GET NS");
-			cup_color.assign(cup_srv.response.CupResult.begin(), cup_srv.response.CupResult.end());
+			cup_color.assign(cup_srv.response.cup_result.begin(), cup_srv.response.cup_result.end());
+			for(int j = 0 ; j < 5 ; j++){
+				// cup_color[j] = cup_srv.response.CupResult[j];
+				ROS_INFO("CUP%d:%d", j, cup_color[j]);
+			}	
 			i = 1;			
 		}
+		else
+			ROS_INFO("color fail call");
 	}
 }
+
+//cup camera service
 void data_state::callCamera(bool req){
 	 c_srv.request.req = req;
 
@@ -122,7 +137,7 @@ void data_state::callCamera(bool req){
 			i = 1;			
 		}
 		else
-			ROS_INFO("fail call");
+			ROS_INFO("cup fail call");
 	}
 	
 	unityCup();

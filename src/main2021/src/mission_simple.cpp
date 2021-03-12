@@ -1,11 +1,12 @@
 #include "ros/ros.h"
 #include <ros/package.h> //not sure if needed
 // #include "std_msgs/String.h"
+#include "std_msgs/Int32.h"
 #include <std_msgs/Int32MultiArray.h>
 #include <std_msgs/Float32MultiArray.h>
 #include<geometry_msgs/PoseStamped.h>
 #include "main2021/maintomission.h"
-#include "main2021/missiontomain.h"
+
 #include <sstream>
 #include <stdio.h>
 #include <iostream>
@@ -27,7 +28,7 @@ int main(int argc, char **argv)
 ros::init(argc, argv, "mission");
 ros::NodeHandle n;
 
-ros::Publisher tomain = n.advertise<main2021::missiontomain>("missionToMain", 1);
+ros::Publisher tomain = n.advertise<std_msgs::Int32>("missionToMain", 1);
 ros::Subscriber sub = n.subscribe("mainToMission", 1, chatterCallback);
 
 ros::Rate loop_rate(10);
@@ -35,9 +36,9 @@ ros::Rate loop_rate(10);
 
   while (ros::ok())
   {
-    main2021::missiontomain to_main;
+    std_msgs::Int32 to_main;
 
-    to_main.state =  state_mission;
+    to_main.data =  state_mission;
     tomain.publish(to_main);
 
     ros::spinOnce();

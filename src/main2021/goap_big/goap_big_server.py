@@ -2,11 +2,12 @@
 #coding=utf-8
 import math
 import rospy
-from goap_2021.srv import *
+from main2021.srv import *
 from precondition import *
 from setting_big_goap import *
 
 print("start goap")
+# global penalty_mission
 penalty_mission = None
 def emergency(current):
     location = current.location
@@ -23,6 +24,7 @@ def emergency(current):
         y -= math.sin(rad) * d
         #check if ( x, y ) will hit the border
         if x < 50:
+            print("debug1",math.cos(rad) * d,  math.sin(rad) * d)
             x = 50
             rad += math.pi / 4
         elif x > 1950:
@@ -38,6 +40,7 @@ def emergency(current):
         else:
             for c in current.cup_state:
                 if (x, y) == c['location']:
+                    print("debug")
                     rad += math.pi / 4
                     break
                 else:
@@ -80,26 +83,50 @@ def evaluate(current, robot):
     else:
         score += 2 * red
     return score
-
+# service .res
+action = []
+position = []
+cup = []
+counter = 0 # for little mission
 def GOAP(req):
-    global penalty_mission
     print("-------------------------------------------------")
+    global penalty_mission
+    global counter
+    global action
+    global position
+    global cup
+    time_main = req.time
+    tmp = 0
+    
     # print("previous current emergency", cur.emergency)
     if (cur.mission)!= None:
         print("previous action ", cur.mission.name)
+        cur.previous_mission = cur.mission
     if cur.emergency == True: # document the action right before entering emergency state
         for mission in cur.mission_list:
             if cur.mission.name == mission.name:
+                # global penalty_mission
                 penalty_mission = mission
                 # print("penalty", mission.name)
     else:
+        # global penalty_mission
         penalty_mission = None
+    # if cur.mission != None and (cur.mission.no == 1 or cur.mission.no == 2 or  cur.mission.no == 9 or  cur.mission.no == 10): 
+    #     counter += 1
+    #     # if cur.mission.no == 1:
+    #     if counter < cur.mission.little_mission_count:
+    #         action.append(cur.mission.no)
+    #         position.append(cur.mission.little_mission_pos[counter][0])
+    #         position.append(cur.mission.little_mission_pos[counter][1])
+    #         position.append(cur.mission.little_mission_pos[counter][2])
+    #         cup.append( 0)
+    #         cup.append(0)
+    #         return action, position, cup
+    #     else:
+    #         counter = 0
     (current, robot1) = mission_precondition(req)
     # print("cur.time", current.time)
-    tmp = 0
-    action = []
-    position = []
-    cup = []
+
     #current.mission_list => a list of action available
     mission = len(current.mission_list)
     state = 1
@@ -107,15 +134,22 @@ def GOAP(req):
     del current.cup_order[:]
 
     if req.emergency == 1:
-        #return location (x, y, theta), try to get out
+        #return location (x, y, theta), try to get out andont delete previous goap res data
         # print("current", current)
         location = emergency(current)
-        action.append(0)
-        position.append(location[0])
-        position.append(location[1])
-        position.append(location[2] )
-        cup.append(0)
-        cup.append(0)
+        # action = list(action)
+        # position = list(position)
+        # cup = list(cup)
+        action.insert(0,0)
+        # action.append(0)
+        position.insert(0, location[2])
+        position.insert(0, location[1])
+        position.insert(0, location[0])
+        cup.insert( 0, 0 )
+        cup.insert( 0, 0 )
+        # position.append(location[0])
+        # position.append(location[1])
+        # position.append(location[2] )
         print("emergency", location)    
     elif req.time >= 100:
         action.append(0)
@@ -124,8 +158,42 @@ def GOAP(req):
         position.append(current.location[2] )
         cup.append(0)
         cup.append(0)
-        print("emergency", current.location)    
+        return action, position, cup
+        print("over 100 second", current.location)    
     elif req.emergency == 0:
+        if cur.previous_mission != None and len(cur.previous_mission.little_mission_no) != 0 and action[0] != cur.previous_mission.little_mission_no[-1]:
+            # if little mission are done we will have to generate new goap data
+            # if action[0] != cur.previous_mission.little_mission_no[-1]: 
+                if action [0] != 0:#if previous action is not emergency
+                    #remove previous action data
+                    action.pop(0)
+                    position.pop(0)
+                    position.pop(0)
+                    position.pop(0)
+                    cup.pop(0)
+                    cup.pop(0)
+                else:
+                    # c = 0
+                    while action[0] == 0:#therer may be more than one emergency action data in previous data
+                        action.pop(0)
+                        position.pop(0)
+                        position.pop(0)
+                        position.pop(0)
+                        cup.pop(0)
+                        cup.pop(0)
+
+                    action.pop(0)
+                    position.pop(0)
+                    position.pop(0)
+                    position.pop(0)
+                    cup.pop(0)
+                    cup.pop(0)
+                print("action", action[0], position[0], position[1], position[2], 0)
+                return action, position, cup
+        else:
+            del action[:]
+            del position[:]
+            del cup[:]
         (current, robot1) = mission_precondition(req)
         tt = 0
         while current.time < 90:
@@ -188,20 +256,30 @@ def GOAP(req):
             del current.candidate[:]
         if current.time <  100 :
             #cur.leaf = [ windsock, lhouse, getcup, getcup_12, getcup_34, reef_private, reef_right, reef_left, placecup_reef, placecupP, placecupH, anchorN, anchorS, flag]
-            flag = current.leaf[13]
-            anchorN = current.leaf[11]
-            anchorS = current.leaf[12]
+            # flag = current.leaf[13]
+            # anchorN = current.leaf[11]
+            # anchorS = current.leaf[12]
+            for m in current.leaf:
+                if m.name == "flag":
+                    flag = m
+                elif m.name == "anchorN":
+                    anchorN = m
+                elif m.name == "anchorS":
+                    anchorS = m
             if current.NS == anchorN.NS and req.action_list[4] == 0:
                 current.achieved.append(anchorN)
             elif current.NS == anchorS.NS and req.action_list[5] == 0:
                 current.achieved.append(anchorS)
-            current.achieved.append(flag)
+            if len(current.achieved) > 1:
+                current.achieved.append(flag)
+            elif req.time >= 95:
+                current.achieved.append(flag)
         
         # print("debug len", len(current.mission_list))
         # for p in current.mission_list:
         #     print("name", p.name)
         temp = 0
-        i = 0
+        i = 0 #little bug i forgot what this is for
 
 	ff = 0
     # if current.time >= 90:
@@ -238,6 +316,25 @@ def GOAP(req):
                 cup.append(0)
                 # position.append(0)
                 i += 1
+            elif len( a.little_mission_no ) != 0:#add little mission pos
+                for i in range( 0, len(a.little_mission_no)): # if a.no == 1 or a.no == 2 or  a.no == 9 or  a.no == 10: 
+                    if i == 0:
+                        print("action", a.no, a.name, a.location[0], a.location[1], a.location[2], 0)
+                        action.append(a.no)
+                        position.append(a.location[0])
+                        position.append( a.location[1])
+                        position.append(a.location[2] )
+                        cup.append(0)
+                        cup.append(0)
+                    else:
+                        print("action", a.little_mission_no[i], a.little_mission_pos[i][0], a.little_mission_pos[i][1], a.little_mission_pos[i][2], 0)
+                        action.append(a.little_mission_no[i])
+                        position.append(a.little_mission_pos[i][0])
+                        position.append(a.little_mission_pos[i][1])
+                        position.append(a.little_mission_pos[i][2] )
+                        cup.append(0)
+                        cup.append(0)
+                i += 1
             else:
                 if a.location != None:
                     print("action", a.no, a.name, a.location[0], a.location[1], a.location[2], 0)
@@ -261,7 +358,8 @@ def GOAP(req):
                 #     cup.append(0)
                 #     # position.append(0)
                 #     i += 1
-        current.mission = current.achieved[0]
+        if len( current.achieved):
+            current.mission = current.achieved[0]
         mission_list = []
         temp = 0
         for a in current.achieved:
@@ -279,7 +377,16 @@ def GOAP(req):
         # for p in mission_list:
         #     print("mission_list", p)
         state = 0
-
+    if len(position) != 0:
+        print("GOAP debug pos", position[0], position[1], position[2])
+    else:
+        position.append(current.location[0])
+        position.append(current.location[1])
+        position.append(current.location[2] )
+        action.append(0)
+        cup.append(0)
+        cup.append(0)
+        print("GOAP no pos")
     return action, position, cup
 
 def goap_server():
