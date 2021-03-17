@@ -2,9 +2,11 @@
 
 launch file:
 
-if you want to launch all node, the launch file is "main_goap0201.launch" 
+ if you want to launch all node, the launch file is "main_goap0201.launch" 
 
---> src/main2021/launch/main_goap0201.launch
+ --> src/main2021/launch/main_goap0201.launch
+ 
+ 
  
 gui strategy:
 
