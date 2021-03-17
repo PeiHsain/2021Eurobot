@@ -26,9 +26,10 @@
 
 class Position{
 public:
-    Position();
+    Position(float, float);
 
     void give_plan(float, float, float);
+    void give_cup(int, int, bool);
     void P_callback(const std_msgs::Int32MultiArray::ConstPtr&);
     void E1_callback(const geometry_msgs::PoseStamped::ConstPtr&);
     void E2_callback(const geometry_msgs::PoseStamped::ConstPtr&);
@@ -51,11 +52,15 @@ public:
 private:
     ros::NodeHandle n;
     ros::Subscriber sub_planner;
+    // ros::Publisher pub_state;
     ros::Publisher pub_planner;
+    ros::Publisher pub_cup;
     ros::Subscriber sub_enemy1;
     ros::Subscriber sub_enemy2;
     ros::Subscriber sub_location;
 
+    // std_msgs::Int32MultiArray p_sta;
+    std_msgs::Int32MultiArray p_cup;
     tf2::Quaternion odom_quat;
     geometry_msgs::PoseStamped transformStamped;
 
@@ -67,12 +72,16 @@ private:
     float py;
     float pz;
 
+    int p_count;
+    int count_old;
+    int give;
+    int give_old;
+
     double p_degree_R;
     double p_degree_P;
     double p_degree_Y;
     //[0] = 0:unarrived, 1:arrived, 2:emergency; [1] = 1:cannot find
     std::vector<int> p_state;
-    
 };
 
 #endif

@@ -7,6 +7,7 @@
 #include "main2021/cup_camera.h"
 #include "main2021/ns.h"
 #include "main2021/cup.h"
+#include "main2021/gui_state.h"
 
 #include "../include/main2021/data_state.h"
 
@@ -26,11 +27,13 @@ typedef struct cup_p
 
 class data_state{
 public:
-	data_state();
+	data_state(float ,float, int);
 	void initial_cup_pos();
 	void callNS(int);
 	void callCup(int);
 	void callCamera(bool);
+
+	void set_ini(GUI);
 
 	float get_sx();
 	float get_sy();
@@ -45,6 +48,7 @@ public:
 	vector<int>& get_list();
 	vector<int>& get_color();
 	int get_cup();
+	int get_script();
 	bool get_ns();
 	int get_team();
 	int now_status();
@@ -56,7 +60,6 @@ public:
 	void unityCup();
 
 	void datacallback(const main2021::Data::ConstPtr&);
-	void spinonce();
 
 private:
 	ros::NodeHandle h;
@@ -87,6 +90,7 @@ private:
 	vector<int> camera_cup_color;
 	vector<float> camera_cup_pos;
 	int cup;
+	int script;
 	int ns;
 	bool team;
 	int status;

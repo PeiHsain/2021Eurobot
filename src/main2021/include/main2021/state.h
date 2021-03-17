@@ -9,7 +9,7 @@ enum STATE {FALSE = 0, SUCCESS, DOING, emerg};
 
 class State{
 public:
-    State(float, float, float, float);
+    State(float, float, float, int);
 
     float getx();
     float gety();
@@ -24,7 +24,7 @@ public:
     bool get_team();
     bool emergOrNot();
     float get_time();
-    int get_strategy();
+    int get_script();
     int get_status();  
 
     int get_p_state();
@@ -34,6 +34,7 @@ public:
     void set_hand(std::vector<int>*);
     void set_list(std::vector<int>*);
     void set_color(std::vector<int>*);
+    void set_script(int);
     void set_cup(int, int);
     void updatecup(int);
     void set_ns(bool);
@@ -59,7 +60,7 @@ private:
     bool team;
     bool emerg;
     float time;
-    int strategy;
+    int script;
     int status;
     int planer_state;
     int mission_state;

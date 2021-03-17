@@ -9,9 +9,11 @@ GUI::GUI(){
 
 	//publish to gui
 	status_pub = n.advertise<std_msgs::Int32>("pub_status", 10);
-	strategy_sub = n.subscribe<std_msgs::Int32>("update_status", 10, &GUI::strategy_sub_callback,this);    
+	status_sub = n.subscribe<std_msgs::Int32>("update_status", 10, &GUI::status_sub_callback,this);
+    strategy_sub = n.subscribe<std_msgs::Int32>("strategy", 10, &GUI::strategy_sub_callback,this);    
 
     change_sta = 0;
+    strategy = 0;
 }
 
 void GUI::pubToGUI(int state){
@@ -21,7 +23,49 @@ void GUI::pubToGUI(int state){
 }
 
 void GUI::strategy_sub_callback(const std_msgs::Int32::ConstPtr& msg){
+    strategy = msg->data;
+}
+
+void GUI::status_sub_callback(const std_msgs::Int32::ConstPtr& msg){
     change_sta = msg->data;
+}
+
+void GUI::set_strategy(){
+    ros::spinOnce();
+
+    if(strategy == 1){ //we are team blue(0)
+        script = 0;
+        team = 0;
+        big_x = 800.;
+        big_y = 250.;
+        small_x = 0.;
+        small_y = 0.;
+    }
+    else if(strategy == 2){ //we are team yellow(1)
+        script = 0;
+        team = 1;
+        big_x = 800.;
+        big_y = 2700.;
+        small_x = 0.;
+        small_y = 0.;
+    }
+    else if(strategy == 3){ //we are team blue(0) with script
+        script = 1;
+        team = 0;
+        big_x = 800.;
+        big_y = 250.;
+        small_x = 0.;
+        small_y = 0.;
+    }
+    else if(strategy == 4){ //we are team yellow(1) with script
+        script = 1;
+        team = 1;
+        big_x = 800.;
+        big_y = 2700.;
+        small_x = 0.;
+        small_y = 0.;
+    }
+
 }
 
 int GUI::changState(){
@@ -29,3 +73,10 @@ int GUI::changState(){
 
     return change_sta;
 }
+
+int GUI::get_script(){ return script;}
+int GUI::get_team(){ return team;}
+float GUI::get_bigX(){ return big_x;}
+float GUI::get_bigY(){ return big_y;}
+float GUI::get_smallX(){ return small_x;}
+float GUI::get_smallY(){ return small_y;}

@@ -12,7 +12,7 @@
 	<node name="data_node" pkg="main2021" type="Data" output="screen" respawn="false">
 	</node>
 
-	<node name="goap_node" pkg="main2021" type="goap_big_server.py" respawn="false">
+	<node name="goap_node" pkg="main2021" type="goap_big_server.py" output="screen" respawn="false">
 	</node>
 
 	<!--<node name="mission_node" pkg="mission" type="mission_topic_big" respawn="false">

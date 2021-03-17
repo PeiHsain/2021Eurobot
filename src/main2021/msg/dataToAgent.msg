@@ -1,10 +1,13 @@
 float32 x
 float32 y
+float32 fx
+float32 fy
 float32 degree
 int32[] action
 int32[] action_list
 int32[] cup_color
 int32 cup
+int32 script
 bool ns
 bool team
 float32 time

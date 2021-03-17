@@ -56,5 +56,6 @@
         "optional": "cpp",
         "random": "cpp",
         "set": "cpp"
-    }
+    },
+    "python.pythonPath": "/usr/bin/python"
 }

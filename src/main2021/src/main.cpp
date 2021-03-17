@@ -15,18 +15,24 @@
 
 using namespace std;
 
+#define INI_POSX 800. //mm
+#define INI_POSY 2700. //mm
 #define BEBLOCK 10*10 //mm
+#define INI_CUP 16777215 //24 cups are here
 enum Status {STRATEGY = 0, RESET, UPDATE_DATA, GET_AGENT2, READY, RUN};
 enum Mode {EMERGENCY = 0, NORMAL};
 extern enum STATE state;// {FALSE = 0, SUCCESS, DOING, emerg};
 
+float x = 0;
+float y = 0;
 float fx = 0;
 float fy = 0;
 float fdegree = 0;
 vector<int> faction(2, 0);
-vector<int> action_list(15, 0);
+vector<int> action_list(25, 0);
 vector<int> cup_color(5, 0);
-int cup = 65535;
+int cup = INI_CUP;
+int script = 0;
 bool ns = 0;
 bool team = 1;
 int status = 0;
@@ -39,19 +45,22 @@ int emerg_Time = 0;
 //int planer_state = 0, mission_state = 0;
 int cont = 0;
 int mode = 1;
-//int goap_action = 0;
-//int odd_action = 0;
+int G = 0;
+// int M2 = 1;
 
 //int change = 0;
 
 void datacallback(const main2021::dataToAgent::ConstPtr& msg){
-    fx = msg->x;
-    fy = msg->y;
+    x = msg->x;
+    y = msg->y;
+    fx = msg->fx;
+    fy = msg->fy;
     fdegree = msg->degree;
     faction.assign(msg->action.begin(), msg->action.end());
     action_list.assign(msg->action_list.begin(), msg->action_list.end());
     cup_color.assign(msg->cup_color.begin(), msg->cup_color.end());
     cup = msg->cup;
+    script = msg->script;
     ns = msg->ns;
     team = msg->team;
     during_time = msg->time;
@@ -104,57 +113,60 @@ int main(int argc, char** argv)
     // m_srv.request.cup = {0};
     // m_srv.request.hand = {0};
 
-    give_data.big_chicken_pos = {800, 2700, 0};
+    give_data.big_chicken_pos = {INI_POSX, INI_POSY, 0};
     give_data.small_chicken_pos = {0, 0, 0};
     give_data.big_action = {0, 0};
     give_data.small_action = {0, 0};
     give_data.big_action_list = {0, 0, 0, 0 ,0 ,0 ,0 ,0 ,0 ,0 ,0 ,0 ,0 ,0 ,0};
     give_data.small_action_list = {0, 0, 0, 0 ,0 ,0 ,0 ,0 ,0 ,0 ,0 ,0 ,0 ,0 ,0};
-    give_data.big_cup = 65535;
-    give_data.small_cup = 65535;
+    give_data.big_cup = INI_CUP;
+    give_data.small_cup = INI_CUP;
     give_data.team = 1;
     give_data.status = 0;
 
     //定義value
-    State states(800., 2700., 0., 0.);
+    State states(INI_POSX, INI_POSY, 0., INI_CUP);
     Friend friends;
-    Position position;
-    goap_data goap;
-    mission_data mission;
+    Position position(INI_POSX, INI_POSY);
+    goap_data goap(INI_POSX, INI_POSY, INI_CUP);
+    mission_data mission(INI_POSX, INI_POSY);
 
+    ros::Rate rate(200);
     //goap action 3 = go home
     while(ros::ok()){ //&& goap.getaction() != 3
         //status update
         states.set_status(status);
-        ROS_INFO("STATUS:%d", states.get_status());
+        // ROS_INFO("STATUS:%d", states.get_status());
         //mode update (RUN) --> EMERGENCY or NORMAL
         //what time is it
         states.set_time(during_time);
-        ROS_INFO("TIME:%f", states.get_time());
+        // ROS_INFO("TIME:%f", states.get_time());
         //actions DONE or UNDO list --> 0 UNDO, 1 DONE
         states.set_list(&action_list);
-        ROS_INFO("LIST[%d]", goap.getaction());
+        // ROS_INFO("LIST[%d]", goap.getaction());
         //cup_state update
         // states.updatecup(cup);
-        ROS_INFO("CUP:%d", states.get_cup());
+        // ROS_INFO("CUP:%d", states.get_cup());
         // for (int i = 0; i < 5; i++)
         // {
         //     ROS_INFO("COLOR[%d]:%d",i , states.get_color()[i]);
         // }
         // ROS_INFO("NS:%d", states.get_ns());
-        for (int i = 0; i < 12; i++)
-        {
-            ROS_INFO("HAND[%d]:%d", (i+1), states.get_hand()[i]);
-        }
+        // for (int i = 0; i < 12; i++)
+        // {
+        //     ROS_INFO("HAND[%d]:%d", (i+1), states.get_hand()[i]);
+        // }
         //To Do********
-        // if(cont != 1)
-        states.setpos(position.get_px(), position.get_py(), position.get_pz(), position.getdegree());
+        if(states.get_p_state() == 1 && G ==1)
+            states.setpos(goap.get_action_x(), goap.get_action_y(), 0, goap.get_action_th());
+        // states.setpos(position.get_px(), position.get_py(), position.get_pz(), position.getdegree());
         ROS_INFO("----------------");
-
+    
         //更新Data//拿自己的位置,角度
         switch(states.get_status()){
             case STRATEGY://戰術選擇
                 //To Do********
+
                 give_data.status = states.get_status();
                 ROS_INFO("STRATEGY");
                 break;
@@ -162,7 +174,8 @@ int main(int argc, char** argv)
                 //To Do********
                 give_data.status = states.get_status();
                 states.set_team(team);
-                
+                states.set_script(script);
+                states.setpos(x, y, 0., 0.);
                 //call localization to get my position   
                 ROS_INFO("RESET");
                 break;
@@ -173,13 +186,7 @@ int main(int argc, char** argv)
                 give_data.big_chicken_pos[2] = states.getth();
                 give_data.big_action = {0};
                 give_data.big_action_list = {0, 0, 0, 0 ,0 ,0 ,0 ,0 ,0 ,0 ,0 ,0 ,0 ,0 ,0};
-                give_data.big_cup = 65535;
-                /*give_data.small_chicken_pos.push_back(states.getx());
-                give_data.small_chicken_pos.push_back(states.gety());
-                give_data.small_chicken_pos.push_back(states.getdegree());
-                give_data.small_action = {0};
-                give_data.small_action_list = {0};
-                give_data.small_cup = 65535;*/
+                give_data.big_cup = INI_CUP;
                 ROS_INFO("UPDATE_DATA");
                 break;
             case GET_AGENT2://拿另一機的資料
@@ -206,9 +213,9 @@ int main(int argc, char** argv)
             case RUN:
                 give_data.status = states.get_status();
                 //cont++;
-                ROS_INFO("RUN");
-                ROS_INFO("x: %f", states.getx());
-                ROS_INFO("y: %f", states.gety());
+                // ROS_INFO("RUN");
+                // ROS_INFO("x: %f", states.getx());
+                // ROS_INFO("y: %f", states.gety());
                 //拿Data,self and friend的位置,角度
                 //To Do********
                 // states.setpos(float x, float y, float z, float degree_x, float degree_y, float degree_z, float degree_w);
@@ -239,11 +246,11 @@ int main(int argc, char** argv)
                         ROS_INFO("EMERG P");
                         position.give_plan(states.getx(), states.gety(), states.getth());
                         ROS_INFO("EMERG M");
-                        mission.give_mission(states, goap);
+                        mission.give_mission(&states, &goap);
                         ROS_INFO("EMERG DURING");
                         if(states.get_time() >= emerg_Time){
                             ROS_INFO("EMERG GOAP");
-                            goap.give_goap(states, friends, position);
+                            goap.give_goap(&states, &friends, &position);
                             ROS_INFO("EMERG PLAN");
                             position.give_plan(goap.get_action_x(), goap.get_action_y(), goap.get_action_th()); 
                             // states.setpos(goap.get_action_x(), goap.get_action_y(), 0, goap.get_action_th());
@@ -252,70 +259,104 @@ int main(int argc, char** argv)
                         break;          
 
                     case NORMAL:
-                        ROS_INFO("NORMAL");
+
+                        // ROS_INFO("NORMAL");
                         if(states.get_p_state() == emerg && states.get_m_state() == emerg){
-                            ROS_INFO("GOAP_EMERG");
+                            // ROS_INFO("GOAP_EMERG");
                             states.set_emerg(false);
-                            goap.give_goap(states, friends, position);
+                            goap.give_goap(&states, &friends, &position);
+
                             //ROS_INFO("E_DONE");
                         }
                         if(states.get_p_state() == FALSE){
-                            ROS_INFO("GOAP_PFALSE");
-                            goap.give_goap(states, friends, position);
+                            // ROS_INFO("GOAP_PFALSE");
+                            goap.give_goap(&states, &friends, &position);
+                            // states.set_m_state(DOING);
+                            // states.set_p_state(DOING);
                             //ROS_INFO("P_DONE");
                         }
-                        else{
+                        else if(states.get_p_state() == SUCCESS){
                             if(states.get_m_state() == SUCCESS){
                                 switch (goap.getaction())
                                 {
                                 case 12: //get cup
                                     if(((1 << (goap.get_action_cup()-1)) & cup) != 0)
                                         break;
-                                    else
-                                        goap.give_goap(states, friends, position);
-                                
+                                    else{
+                                        goap.give_goap(&states, &friends, &position);
+                                        // states.set_m_state(DOING);
+                                        // states.set_p_state(DOING);
+                                        break;
+                                    }
                                 case 13: //get cup1 and cup2
                                     if((3 & cup) != 0)
                                         break;
-                                    else
-                                        goap.give_goap(states, friends, position);
-                        
+                                    else{
+                                        goap.give_goap(&states, &friends, &position);
+                                        // states.set_m_state(DOING);
+                                        // states.set_p_state(DOING);
+                                        break;
+                                    }
                                 case 14: //get cup3 and cup4
                                     if((12 & cup) != 0)
                                         break;
-                                    else
-                                        goap.give_goap(states, friends, position);
+                                    else{
+                                        goap.give_goap(&states, &friends, &position);
+                                        // states.set_m_state(DOING);
+                                        // states.set_p_state(DOING);
+                                        break;
+                                    }
                                 default:
-                                    goap.give_goap(states, friends, position);
+                                    goap.give_goap(&states, &friends, &position);
+                                    // states.set_m_state(DOING);
+                                    // states.set_p_state(DOING);
+                                    break;
                                 }
-                                ROS_INFO("GOAP_M");
-                                
+                                // ROS_INFO("GOAP_M")
                             }
                             else if(states.get_m_state() == FALSE){
-                                ROS_INFO("GOAP_M");
-                                goap.give_goap(states, friends, position);
+                                // ROS_INFO("GOAP_M");
+                                goap.give_goap(&states, &friends, &position);
                             }
-                            ROS_INFO("SAME ACTION:%d", goap.samePosOrNot());
+                            // ROS_INFO("SAME ACTION:%d", goap.samePosOrNot());
                             //ROS_INFO("M_DONE");
+                        }             
+                        
+                        // ROS_INFO("POS:%d", goap.samePosOrNot());
+                        ROS_INFO("G:%d", G);
+                        if(goap.samePosOrNot() == false|| G == 0){ //&& states.get_p_state() != SUCCESS){
+                            position.give_plan(goap.get_action_x(), goap.get_action_y(), goap.get_action_th());
+                            // ROS_INFO("CALL P");
                         }
 
-                        
-                        ROS_INFO("P_STATE:%d", states.get_p_state());
-                        if(goap.samePosOrNot() == false || states.get_p_state() != SUCCESS){
-                            ROS_INFO("PLANNER");
-                            position.give_plan(goap.get_action_x(), goap.get_action_y(), goap.get_action_th());
+                        if(G == 0){
+                            states.set_p_state(DOING);
+                            mission.give_mission(&states, &goap);
+                            states.set_m_state(DOING);
                         }
-                        //To Do*******
-                        mission.give_mission(states, goap);
+                        else{
+                            // states.set_p_state(SUCCESS);
+                            states.set_p_state(position.get_p_state());
+                            //To Do*******
+                            // ROS_INFO("ACT:%d", goap.sameActionOrNot());
+                            mission.give_mission(&states, &goap);
+                            // states.set_m_state(DOING);
+                            states.set_m_state(mission.getstate(states, goap));                            
+                        }                        
+                        G = 1;
 
                         //更新Data
-                        //planner state update
-                        states.set_p_state(position.get_p_state());
-                        states.set_m_state(mission.getstate(states, goap));
+                        ROS_INFO("P:%d", states.get_p_state());
                         ROS_INFO("M:%d", states.get_m_state());
+                        // if(goap.getaction() == 2)
+                        //     M2 = states.get_m_state();
+                        // else if(goap.getaction() == 14)
+                        //     M14 = states.get_m_state();
                         ROS_INFO("NOW:%d", goap.getaction());
                         if(states.get_m_state() == SUCCESS){
                             action_list[goap.getaction()] = 1;
+                            if(action_list[goap.getaction()] != 1)
+                                position.give_cup(goap.get_action_cup(), goap.getaction(), states.get_team());
                             //ROS_INFO("1:%d", action_list[goap.getaction()]);
                             states.set_hand(&mission.get_hand());
                             states.set_cup(goap.get_action_cup(), goap.getaction());                           
@@ -335,13 +376,16 @@ int main(int argc, char** argv)
                         give_data.big_action[5] = goap.get_action_hand();
                         give_data.big_action_list.assign(action_list.begin(), action_list.end());
                         give_data.big_cup = states.get_cup();
-                        ROS_INFO("UPDATE_DONE: %d",give_data.big_action_list[2]);
+                        // ROS_INFO("UPDATE_DONE: %d",give_data.big_action_list[2]);
                         break;
                 }                   
         }
-        //ROS_INFO("GIVE DATA");
+        // for(int i = 1 ; i <= 24 ; i++)
+        //     ROS_INFO("%d: %d", i, action_list[i]);
+        // ROS_INFO("M2: %d", M2);
         pub_data.publish(give_data);
         ros::spinOnce();
+        rate.sleep();
         // position.rx();
     }
     return 0;

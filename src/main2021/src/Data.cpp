@@ -11,6 +11,10 @@
 #include <stdlib.h>
 #include <vector>
 
+#define INIbig_POSX 800. //mm
+#define INIbig_POSY 2700. //mm
+#define INI_CUP 16777215 //24 cups are here
+
 using namespace std;
 
 int main(int argc, char** argv){
@@ -30,7 +34,7 @@ int main(int argc, char** argv){
 
 	//data
 	GUI gui;
-	data_state state;
+	data_state state(INIbig_POSX, INIbig_POSY, INI_CUP);
 	ros::Subscriber sub_data = nh.subscribe<main2021::Data>("giveToData", 1000, &data_state::datacallback, &state);
 
 	int start = 0;
@@ -53,7 +57,9 @@ int main(int argc, char** argv){
 				
 				ROS_INFO("STATE 0");
 				cameraCall = false;
-				now_status = gui.changState();
+				gui.set_strategy();
+				state.set_ini(gui);
+				// now_status = gui.changState();
 				break;
 			case 1://機構,底盤reset
 				
@@ -104,13 +110,16 @@ int main(int argc, char** argv){
 		// state.callNS(cupCall);
 		// state.callNS(nsCall);
 		//give big chicken
-		big.x = state.get_sx();
-		big.y = state.get_sy();
+		big.x = state.get_bx();
+		big.y = state.get_by();
+		big.fx = state.get_sx();
+		big.fy = state.get_sy();
 		big.degree = state.get_sdegree();
 		big.action.assign(state.get_saction().begin(), state.get_saction().end());
 		big.action_list.assign(state.get_list().begin(), state.get_list().end());
 		big.cup_color.assign(state.get_color().begin(), state.get_color().end());
 		big.cup = state.get_cup();
+		big.script = state.get_script();
 		big.ns = state.get_ns();
 		big.team = state.get_team();
 		big.time = doing_time;
@@ -119,13 +128,16 @@ int main(int argc, char** argv){
 		pub_dataBig.publish(big);
 		//ROS_INFO("BIG");
 		//give small chicken
-		small.x = state.get_bx();
-		small.y = state.get_by();
+		small.x = state.get_sx();
+		small.y = state.get_sy();
+		small.fx = state.get_bx();
+		small.fy = state.get_by();
 		small.degree = state.get_bdegree();
 		small.action.assign(state.get_baction().begin(), state.get_baction().end());
 		small.action_list.assign(state.get_list().begin(), state.get_list().end());
 		small.cup_color.assign(state.get_color().begin(), state.get_color().end());
 		small.cup = state.get_cup();
+		small.script = state.get_script();
 		small.ns = state.get_ns();
 		small.team = state.get_team();
 		small.time = doing_time;
@@ -134,7 +146,6 @@ int main(int argc, char** argv){
 		pub_dataSmall.publish(small);
 
 		ros::spinOnce();
-		//state.spinonce();
 	}
 
 	return 0;
